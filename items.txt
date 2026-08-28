@@ -1,0 +1,8 @@
+# 每行一个物品:  物品名 | 数量
+# 数量 = 要下载几张图。不写数量就用默认值 (--count,默认 5)。
+# 井号开头的行会被忽略。分隔符 | 或 , 或 = 都行。
+
+excavator demolition | 5
+concrete crusher attachment | 4
+safety helmet construction, 6
+hydraulic breaker

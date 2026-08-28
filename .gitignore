@@ -1,0 +1,10 @@
+# 下载产物,不入库
+downloads/
+test_cn/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
