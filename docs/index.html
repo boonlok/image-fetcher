@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>image-fetcher — 物品图片批量下载工具</title>
+<style>
+  :root{
+    --bg:#f7f7f8; --card:#ffffff; --border:#e4e4e7; --text:#18181b;
+    --muted:#71717a; --accent:#2563eb; --accent-soft:#e7f0ff;
+    --code-bg:#1e1e2e; --code-text:#e4e4e7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f0f11; --card:#18181b; --border:#2a2a2e; --text:#f4f4f5;
+      --muted:#a1a1aa; --accent:#60a5fa; --accent-soft:#1e293b;
+      --code-bg:#09090b; --code-text:#e4e4e7;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    line-height:1.65;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:48px 24px 80px}
+  header{margin-bottom:40px}
+  h1{font-size:2rem; margin:0 0 8px; letter-spacing:-.02em}
+  .tag{color:var(--muted); font-size:1.05rem; margin:0}
+  .pill{
+    display:inline-block; margin-top:16px; padding:4px 12px; border-radius:999px;
+    background:var(--accent-soft); color:var(--accent); font-size:.85rem; font-weight:600;
+  }
+  h2{font-size:1.25rem; margin:40px 0 12px; letter-spacing:-.01em}
+  section{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px 24px; margin-bottom:18px;
+  }
+  p{margin:8px 0}
+  ul{margin:8px 0; padding-left:22px}
+  li{margin:4px 0}
+  code{
+    background:var(--accent-soft); color:var(--accent);
+    padding:1px 6px; border-radius:5px; font-size:.9em;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace;
+  }
+  pre{
+    background:var(--code-bg); color:var(--code-text); padding:16px 18px;
+    border-radius:10px; overflow-x:auto; font-size:.88rem;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; line-height:1.5;
+  }
+  pre code{background:none; color:inherit; padding:0}
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:.92rem}
+  th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--border)}
+  th{color:var(--muted); font-weight:600}
+  td code{white-space:nowrap}
+  a{color:var(--accent)}
+  .note{
+    border-left:3px solid var(--accent); padding-left:14px; color:var(--muted);
+    font-size:.92rem; margin:14px 0;
+  }
+  .tree{font-family:ui-monospace,Consolas,monospace; font-size:.86rem; color:var(--muted); white-space:pre}
+  footer{margin-top:48px; color:var(--muted); font-size:.85rem; text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>image-fetcher</h1>
+    <p class="tag">输入物品清单和每个物品要几张图，自动到网上搜图并下载到本地。</p>
+    <span class="pill">本机 Python 脚本 · 免费 · 免 API key</span>
+  </header>
+
+  <section>
+    <h2>它做什么</h2>
+    <ul>
+      <li>你给一份清单：<b>物品名 + 要下载几张图</b></li>
+      <li>脚本用 DuckDuckGo 图片搜索每个物品</li>
+      <li>按物品分文件夹，把图片下载到本地</li>
+      <li>自动跳过下载失败、重复、过小的图，直到凑够数量</li>
+      <li>生成一个 <code>summary.html</code>：一页看完所有图 + 每个物品的需求数量</li>
+    </ul>
+    <div class="note">
+      为什么是本机脚本而不是网页：浏览器出于安全限制，无法自动把文件写到你的电脑硬盘。
+      要真正“下载到本地”，必须在本机运行脚本。
+    </div>
+  </section>
+
+  <section>
+    <h2>安装（只需一次）</h2>
+    <pre><code>git clone https://github.com/boonlok/image-fetcher.git
+cd image-fetcher
+pip install -r requirements.txt</code></pre>
+    <p>需要 Python 3.9+。依赖：<code>ddgs</code>、<code>requests</code>、<code>pillow</code>。</p>
+  </section>
+
+  <section>
+    <h2>用法</h2>
+    <p><b>方式 1 — 清单文件。</b>编辑 <code>items.txt</code>，每行一个物品：</p>
+    <pre><code>excavator demolition | 5
+concrete crusher attachment | 4
+safety helmet construction, 6
+hydraulic breaker</code></pre>
+    <p>分隔符 <code>|</code> <code>,</code> <code>=</code> 都行；不写数量就用默认值；<code>#</code> 开头的行忽略。然后：</p>
+    <pre><code>python fetch_images.py</code></pre>
+
+    <p style="margin-top:20px"><b>方式 2 — 命令行直接写：</b></p>
+    <pre><code>python fetch_images.py "挖掘机=3" "safety helmet=10" "hydraulic breaker"</code></pre>
+    <p class="note">中文物品名可用，但英文关键词通常搜到的图更多更准。</p>
+  </section>
+
+  <section>
+    <h2>参数</h2>
+    <table>
+      <tr><th>参数</th><th>说明</th><th>默认</th></tr>
+      <tr><td><code>--items 文件</code></td><td>清单文件路径</td><td><code>items.txt</code></td></tr>
+      <tr><td><code>--out 目录</code></td><td>下载目录</td><td><code>downloads</code></td></tr>
+      <tr><td><code>--count N</code></td><td>没写数量时每个物品下几张</td><td><code>5</code></td></tr>
+      <tr><td><code>--min-size N</code></td><td>图片最短边像素下限，过滤小图</td><td><code>300</code></td></tr>
+      <tr><td><code>--timeout N</code></td><td>单张下载超时（秒）</td><td><code>20</code></td></tr>
+      <tr><td><code>--safesearch</code></td><td><code>on</code> / <code>moderate</code> / <code>off</code></td><td><code>moderate</code></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>输出结构</h2>
+<div class="tree">downloads/
+├── excavator demolition/
+│   ├── 001.jpg
+│   ├── 002.jpg
+│   └── ...
+├── safety helmet construction/
+│   └── ...
+└── summary.html   ← 浏览器打开，看所有图 + 需求数量</div>
+  </section>
+
+  <section>
+    <h2>说明</h2>
+    <ul>
+      <li>图片来自 DuckDuckGo 公开图片搜索，可能有版权，适合内部参考 / 识别用途，不建议直接商用。</li>
+      <li>脚本在 Windows 上会强制 UTF-8 输出（控制台默认不是 UTF-8）。</li>
+    </ul>
+  </section>
+
+  <footer>
+    源码：<a href="https://github.com/boonlok/image-fetcher">github.com/boonlok/image-fetcher</a>
+  </footer>
+</div>
+</body>
+</html>
